@@ -1,4 +1,4 @@
-package switorik.randtp;
+package switorik.randomtp;
 
 import org.bukkit.plugin.java.JavaPlugin;
 

@@ -1,4 +1,4 @@
-package switorik.randtp;
+package switorik.randomtp;
 
 import org.bukkit.*;
 import org.bukkit.block.Block;
