@@ -1,6 +1,6 @@
-name: RandTp
+name: randomtp
 version: @version@
-main: switorik.randtp.Main
+main: switorik.randomtp.Main
 api-version: 1.13
 description: A random teleport into the wilderness.
 commands:

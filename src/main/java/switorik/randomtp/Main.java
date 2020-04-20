@@ -2,6 +2,8 @@ package switorik.randomtp;
 
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.Objects;
+
 public final class Main extends JavaPlugin {
 
     public static Main plugin;
@@ -14,6 +16,7 @@ public final class Main extends JavaPlugin {
         getServer().getLogger().info("Random teleporter has initiated.");
         this.getCommand("wild").setExecutor(new wildcmd());
         saveResource("config.yml", false);
+        Objects.requireNonNull(this.getCommand("wild")).setTabCompleter(new tabComplete());
 
     }
 
