@@ -23,3 +23,4 @@ public final class Main extends JavaPlugin {
         getServer().getLogger().info("Random teleporter has stopped.");
     }
 }
+//swit smells ;/
