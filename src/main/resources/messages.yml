@@ -1,0 +1,10 @@
+noperm: §4You do not have permission to use this command.
+teleport: §eYou have teleported to a random location. You can set your home with §f/sethome§e.
+times: §4You can not teleport anymore.
+world: §4You can not use that in this world
+reset: §eYou have reset §f%p§es random teleport.
+noplayer: §4player by that name does not exist.
+addplayer: §4You must add a player name to reset.
+reload: §eYou reloaded randomTP config.
+info: §eThis will teleport you to a random destination within the world border. Type §f/wild confirm §eto teleport.
+ingame: You must be in game to run this command.

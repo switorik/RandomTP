@@ -2,6 +2,7 @@ package switorik.randomtp;
 
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.block.data.Waterlogged;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -9,6 +10,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -21,6 +23,7 @@ public class wildcmd implements CommandExecutor {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 
         Main p = Main.plugin;
+        YamlConfiguration message = Main.message;
 
         if(sender instanceof Player) {
 
@@ -43,7 +46,7 @@ public class wildcmd implements CommandExecutor {
 
                         if(yml.getInt("times") >= times && times != -1) {
 
-                            player.sendMessage(colorize("&4You can not teleport anymore."));
+                            player.sendMessage(message.getString("times"));
                             return true;
 
                         }
@@ -57,11 +60,15 @@ public class wildcmd implements CommandExecutor {
                             Random num = new Random();
                             Block b;
                             Location dest;
+                            boolean waterlogged;
+                            List<String> badBlocks = p.getConfig().getStringList("disallowedblocks");
+
                             do {
                                 double x = num.nextInt(wbSize);
                                 double z = num.nextInt(wbSize);
                                 int negX = num.nextInt(2);
                                 int negZ = num.nextInt(2);
+
 
                                 if (negX == 1) {
 
@@ -88,11 +95,22 @@ public class wildcmd implements CommandExecutor {
                                     }
 
                                 b = dest.getBlock();
-                            } while (b.getType() == Material.WATER || b.getType() == Material.LAVA);
+
+                                    if(p.getConfig().getBoolean("allowwaterloggedblocks") == false) {
+
+                                        waterlogged = b.getBlockData() instanceof Waterlogged;
+
+                                } else {
+
+                                        waterlogged = false;
+
+                                    }
+
+                            } while (badBlocks.contains(b.getType().toString()) || waterlogged);
 
                             player.teleport(dest.add(0, 1.5, 0));
-                            player.sendMessage(colorize("&eYou have teleported to a random location."));
-                            player.sendMessage(colorize("&eYou can set your home with &f/sethome&e."));
+                            player.sendMessage(message.getString("teleport"));
+                            //player.sendMessage(colorize("&eYou can set your home with &f/sethome&e."));
                             yml.set("times", yml.getInt("times") + 1);
                             yml.set("location", dest);
                             try {
@@ -103,13 +121,13 @@ public class wildcmd implements CommandExecutor {
 
                         } else {
 
-                            player.sendMessage(colorize("&4You can not use that in this world"));
+                            player.sendMessage(message.getString("world"));
 
                         }
 
                     } else {
 
-                        player.sendMessage(colorize("&4You do not have permission to use this command."));
+                        player.sendMessage(message.getString("noperm"));
 
                     }
 
@@ -134,23 +152,23 @@ public class wildcmd implements CommandExecutor {
                                         e.printStackTrace();
                                     }
 
-                                    player.sendMessage(colorize("&eYou have reset &f" + args[1] + "&es random teleport."));
+                                    player.sendMessage(message.getString("reset").replace("%p", args[1]));
 
                                 } else {
 
-                                    player.sendMessage(colorize("&4A player by that name does not exist."));
+                                    player.sendMessage(message.getString("noplayer"));
 
                                 }
 
                             } else {
 
-                                player.sendMessage(colorize("&4You must add a player name to reset."));
+                                player.sendMessage(message.getString("addplayer"));
 
                             }
 
                         } else {
 
-                            player.sendMessage(colorize("&4You do not have permission to use this command."));
+                            player.sendMessage(message.getString("noperm"));
 
                         }
 
@@ -161,11 +179,11 @@ public class wildcmd implements CommandExecutor {
                             if(player.hasPermission("randomtp.reload")) {
 
                                 p.reloadConfig();
-                                player.sendMessage(colorize("&2You reloaded randomTP config."));
+                                player.sendMessage(message.getString("reload"));
 
                             } else {
 
-                                player.sendMessage(colorize("&4You do not have permission to use this command."));
+                                player.sendMessage(message.getString("noperm"));
 
                             }
 
@@ -178,8 +196,8 @@ public class wildcmd implements CommandExecutor {
             } else {
 
                 //if no arguments exist, add warning message saying /wild confirm to run command.
-                player.sendMessage(colorize("&eThis will teleport you to a random destination within the world border."));
-                player.sendMessage(colorize("&eType /wild confirm to teleport"));
+                player.sendMessage(message.getString("info"));
+                //player.sendMessage(colorize("&eType /wild confirm to teleport"));
 
             }
 
@@ -189,16 +207,11 @@ public class wildcmd implements CommandExecutor {
 
         } else {
 
-            sender.sendMessage("You must be in game to run this command.");
+            sender.sendMessage(message.getString("ingame"));
 
         }
         return true;
     }
 
-    public String colorize(String msg) {
-
-        return ChatColor.translateAlternateColorCodes('&', msg);
-
-    }
 
 }

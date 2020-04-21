@@ -1,4 +1,4 @@
-name: randomtp
+name: RandomTP
 version: @version@
 main: switorik.randomtp.Main
 api-version: 1.13
