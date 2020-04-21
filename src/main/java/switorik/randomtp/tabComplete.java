@@ -19,12 +19,14 @@ public class tabComplete implements TabCompleter {
         switch (args.length) {
             case 0: {
                 output.add("reset");
+                output.add("reload");
                 output.add("confirm");
                 return output;
             }
             case 1: {
                 if ("confirm".startsWith(args[0]) && sender.hasPermission("randomtp.use")) { output.add("confirm"); }
                 if ("reset".startsWith(args[0]) && sender.hasPermission("randomtp.reset")) { output.add("reset"); }
+                if ("reload".startsWith(args[0]) && sender.hasPermission("randomtp.reload")) { output.add("reload"); }
                 return output;
             }
             case 2: {

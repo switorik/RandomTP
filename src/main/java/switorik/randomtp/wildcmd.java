@@ -7,11 +7,13 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Random;
+
+//reloadcommand
+//language file
 
 public class wildcmd implements CommandExecutor {
 
@@ -58,38 +60,37 @@ public class wildcmd implements CommandExecutor {
                             do {
                                 double x = num.nextInt(wbSize);
                                 double z = num.nextInt(wbSize);
-                                int negX = num.nextInt(1);
-                                int negZ = num.nextInt(1);
+                                int negX = num.nextInt(2);
+                                int negZ = num.nextInt(2);
 
                                 if (negX == 1) {
 
                                     x *= -1;
-                                    x += .5;
 
-                                } else {
-                                    x -= .5;
                                 }
 
                                 if (negZ == 1) {
 
                                     z *= -1;
-                                    z += .5;
 
-                                } else {
-                                    z -= .5;
                                 }
-
 
                                 dest = new Location(player.getWorld(),
                                         loc.getX() + x,
-                                        player.getWorld().getHighestBlockYAt(loc.getBlockX() + (int) x, loc.getBlockZ() + (int) z),
+                                        255,
+                                        //player.getWorld().getHighestBlockYAt(loc.getBlockX() + (int) x, loc.getBlockZ() + (int) z),
                                         loc.getZ() + z);
 
-                                //Location check = dest.subtract(0,1,0);
+                                    while(dest.getBlock().getType().equals(Material.AIR)) {
+
+                                        dest.setY(dest.getY() - 1);
+
+                                    }
+
                                 b = dest.getBlock();
                             } while (b.getType() == Material.WATER || b.getType() == Material.LAVA);
 
-                            player.teleport(dest.add(0, 1, 0));
+                            player.teleport(dest.add(0, 1.5, 0));
                             player.sendMessage(colorize("&eYou have teleported to a random location."));
                             player.sendMessage(colorize("&eYou can set your home with &f/sethome&e."));
                             yml.set("times", yml.getInt("times") + 1);
@@ -114,7 +115,7 @@ public class wildcmd implements CommandExecutor {
 
                 } else {
 
-                    if(args[0].equals("reset")) {
+                    if(args[0].equalsIgnoreCase("reset")) {
 
                         //sets a players random teleport uses to 0
                         if(player.hasPermission("randomtp.reset")) {
@@ -150,6 +151,23 @@ public class wildcmd implements CommandExecutor {
                         } else {
 
                             player.sendMessage(colorize("&4You do not have permission to use this command."));
+
+                        }
+
+                    } else {
+
+                        if(args[0].equalsIgnoreCase( "reload")) {
+
+                            if(player.hasPermission("randomtp.reload")) {
+
+                                p.reloadConfig();
+                                player.sendMessage(colorize("&2You reloaded randomTP config."));
+
+                            } else {
+
+                                player.sendMessage(colorize("&4You do not have permission to use this command."));
+
+                            }
 
                         }
 
