@@ -10,3 +10,5 @@ disallowedblocks:
   - TALL_SEAGRASS
 allowwaterloggedblocks: false
 times: 1
+center: world_border
+radius: world_border

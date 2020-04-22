@@ -10,7 +10,6 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -109,7 +108,7 @@ public class wildcmd implements CommandExecutor {
                             } while (badBlocks.contains(b.getType().toString()) || waterlogged);
 
                             player.teleport(dest.add(0, 1.5, 0));
-                            player.sendMessage(message.getString("teleport"));
+                            player.sendMessage(message.getString("teleport").replace("%n", "\n"));
                             //player.sendMessage(colorize("&eYou can set your home with &f/sethome&e."));
                             yml.set("times", yml.getInt("times") + 1);
                             yml.set("location", dest);
@@ -196,7 +195,7 @@ public class wildcmd implements CommandExecutor {
             } else {
 
                 //if no arguments exist, add warning message saying /wild confirm to run command.
-                player.sendMessage(message.getString("info"));
+                player.sendMessage(message.getString("info").replace("%n", "\n"));
                 //player.sendMessage(colorize("&eType /wild confirm to teleport"));
 
             }
