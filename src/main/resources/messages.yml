@@ -8,3 +8,4 @@ addplayer: §4You must add a player name to reset.
 reload: §eYou reloaded randomTP config.
 info: §eThis will teleport you to a random destination within the world border. %n§eType §f/wild confirm §eto teleport.
 ingame: You must be in game to run this command.
+group: §eYou are starting a group random teleport. You can not move until you /wild cancel or teleport.

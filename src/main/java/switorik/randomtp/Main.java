@@ -18,11 +18,16 @@ public final class Main extends JavaPlugin {
         plugin = this;
         getServer().getLogger().info("Random teleporter has initiated.");
         this.getCommand("wild").setExecutor(new wildcmd());
-        saveResource("config.yml", false);
-        saveResource("messages.yml", false);
+        //saveResource("config.yml", false);
+        //saveResource("messages.yml", false);
         Objects.requireNonNull(this.getCommand("wild")).setTabCompleter(new tabComplete());
 
-        setupMessages();
+        reloadMessages();
+
+        File configyml = new File(plugin.getDataFolder() + File.separator + "config.yml");
+        if (!configyml.exists()) {
+            plugin.saveResource("config.yml", false);
+        }
 
     }
 
@@ -32,10 +37,14 @@ public final class Main extends JavaPlugin {
         getServer().getLogger().info("Random teleporter has stopped.");
     }
 
-    public static void setupMessages() {
+    public void reloadMessages() {
 
-        File file = new File(plugin.getDataFolder() + File.separator + "messages.yml");
-        message = YamlConfiguration.loadConfiguration(file);
+        File messagesyml = new File(plugin.getDataFolder() + File.separator + "messages.yml");
+        if(messagesyml.exists()) {
+            message = YamlConfiguration.loadConfiguration(messagesyml);
+        } else {
+            plugin.saveResource("messages.yml", false);
+        }
 
     }
 

@@ -7,210 +7,330 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 
-//reloadcommand
-//language file
-
 public class wildcmd implements CommandExecutor {
+
+    Main plugin = Main.plugin;
+
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 
-        Main p = Main.plugin;
         YamlConfiguration message = Main.message;
 
         if(sender instanceof Player) {
 
-            Player player = (Player) sender;
+            switch(args.length) {
+                case 1: {
+                    if(args[0].equalsIgnoreCase("confirm")) confirm((Player) sender);
+                    else if(args[0].equalsIgnoreCase("reload")) reload((Player) sender);
+                    else if(args[0].equalsIgnoreCase("reset")) reset((Player) sender, args);
+                    else if(args[0].equalsIgnoreCase("group")) group((Player) sender, args);
+                    else if(args[0].equalsIgnoreCase("cancel")) groupCancel((Player) sender, args);
+                    else sender.sendMessage(Objects.requireNonNull(message.getString("info")).replace("%n", "\n"));
+                    return true;
+                }
+                default: {
+                    if(sender.hasPermission("randomtp.use"))
+                        sender.sendMessage(Objects.requireNonNull(message.getString("info")).replace("%n", "\n"));
+                    else sender.sendMessage(Objects.requireNonNull(message.getString("noperm")));
+                    return true;
+                }
 
-            if(args.length > 0) {
+            }
 
-                if(args[0].equalsIgnoreCase("confirm")) {
+        } else {
 
+            sender.sendMessage(Objects.requireNonNull(message.getString("ingame")));
+            return true;
 
-                    if(player.hasPermission("randomtp.use")) {
+        }
 
-                        //get allowed worlds in config
-                        //get allowed teleport times in config
-                        List<String> worlds = p.getConfig().getStringList("allowedworlds");
-                        int times = p.getConfig().getInt("times");
+     }
 
-                        File ymlFile = new File(p.getDataFolder() + File.separator + "data" + File.separator + player.getUniqueId() + ".yml");
-                        YamlConfiguration yml = new YamlConfiguration().loadConfiguration(ymlFile);
+    private void confirm(Player player) {
+        //run the random teleport if available
 
-                        if(yml.getInt("times") >= times && times != -1) {
+        YamlConfiguration message = Main.message;
+        if(player.hasPermission("randomtp.use")) {
 
-                            player.sendMessage(message.getString("times"));
-                            return true;
+            int times = plugin.getConfig().getInt("times"); //the amount of times a player can use /wild
 
-                        }
+            File ymlFile = new File(plugin.getDataFolder() + File.separator + "data" + File.separator +  "data.yml");
+            YamlConfiguration yml = new YamlConfiguration().loadConfiguration(ymlFile);
 
-                        if(worlds.contains(player.getWorld().getName())) {
+            if (yml.getInt(player.getUniqueId().toString()) < times || times == -1) {
 
-                            WorldBorder wb = player.getWorld().getWorldBorder();
-                            int wbSize = (int) wb.getSize() / 2;
-                            Location loc = wb.getCenter();
+                if (plugin.getConfig().getStringList("allowedworlds").contains(player.getWorld().getName())) {
 
-                            Random num = new Random();
-                            Block b;
-                            Location dest;
-                            boolean waterlogged;
-                            List<String> badBlocks = p.getConfig().getStringList("disallowedblocks");
+                    Location dest = randomTP(player.getWorld());
 
-                            do {
-                                double x = num.nextInt(wbSize);
-                                double z = num.nextInt(wbSize);
-                                int negX = num.nextInt(2);
-                                int negZ = num.nextInt(2);
-
-
-                                if (negX == 1) {
-
-                                    x *= -1;
-
-                                }
-
-                                if (negZ == 1) {
-
-                                    z *= -1;
-
-                                }
-
-                                dest = new Location(player.getWorld(),
-                                        loc.getX() + x,
-                                        255,
-                                        //player.getWorld().getHighestBlockYAt(loc.getBlockX() + (int) x, loc.getBlockZ() + (int) z),
-                                        loc.getZ() + z);
-
-                                    while(dest.getBlock().getType().equals(Material.AIR)) {
-
-                                        dest.setY(dest.getY() - 1);
-
-                                    }
-
-                                b = dest.getBlock();
-
-                                    if(p.getConfig().getBoolean("allowwaterloggedblocks") == false) {
-
-                                        waterlogged = b.getBlockData() instanceof Waterlogged;
-
-                                } else {
-
-                                        waterlogged = false;
-
-                                    }
-
-                            } while (badBlocks.contains(b.getType().toString()) || waterlogged);
-
-                            player.teleport(dest.add(0, 1.5, 0));
-                            player.sendMessage(message.getString("teleport").replace("%n", "\n"));
-                            //player.sendMessage(colorize("&eYou can set your home with &f/sethome&e."));
-                            yml.set("times", yml.getInt("times") + 1);
-                            yml.set("location", dest);
-                            try {
-                                yml.save(ymlFile);
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-
-                        } else {
-
-                            player.sendMessage(message.getString("world"));
-
-                        }
-
-                    } else {
-
-                        player.sendMessage(message.getString("noperm"));
-
+                    player.teleport(dest.add(0, 1.5, 0));
+                    player.sendMessage(message.getString("teleport").replace("%n", "\n"));
+                    yml.set(player.getUniqueId().toString(), yml.getInt(player.getUniqueId().toString()) + 1);
+                    //yml.set("location", dest); unnecessary extra data
+                    try {
+                        yml.save(ymlFile);
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
+                } else {
+
+                    player.sendMessage(Objects.requireNonNull(message.getString("world")));
+
+                }
+
+            } else {
+
+                player.sendMessage(Objects.requireNonNull(message.getString("times")));
+
+            }
+
+
+        } else {
+
+            player.sendMessage(Objects.requireNonNull(message.getString("noperm")));
+
+        }
+
+    }
+
+    private void reload(Player player) {
+        //reload config and messages
+        YamlConfiguration message = Main.message;
+            if(player.hasPermission("randomtp.reload")) {
+
+                plugin.reloadConfig();
+                plugin.reloadMessages();
+                player.sendMessage(Objects.requireNonNull(message.getString("reload")));
+
+            } else {
+
+                player.sendMessage(Objects.requireNonNull(message.getString("noperm")));
+
+            }
+
+    }
+
+    private void reset(Player player, String[] args) {
+        //resets a players random teleport uses
+        YamlConfiguration message = Main.message;
+        if(player.hasPermission("randomtp.reset")) {
+
+            if(args.length > 1) {
+
+                if(Bukkit.getServer().getPlayer(args[1]) instanceof Player) {
+
+                    File ymlFile = new File(plugin.getDataFolder() + File.separator + "data" + File.separator + "data.yml");
+                    YamlConfiguration yml = new YamlConfiguration().loadConfiguration(ymlFile);
+
+                    yml.set(Bukkit.getServer().getPlayer(args[1]).getUniqueId().toString(), 0);
+                    try {
+                        yml.save(ymlFile);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    player.sendMessage(Objects.requireNonNull(message.getString("reset")).replace("%p", args[1]));
 
                 } else {
 
-                    if(args[0].equalsIgnoreCase("reset")) {
+                    player.sendMessage(Objects.requireNonNull(message.getString("noplayer")));
 
-                        //sets a players random teleport uses to 0
-                        if(player.hasPermission("randomtp.reset")) {
+                }
 
-                            if(args.length > 1) {
+            } else {
 
-                                if(Bukkit.getServer().getPlayer(args[1]) instanceof Player) {
+                player.sendMessage(Objects.requireNonNull(message.getString("addplayer")));
 
-                                    File ymlFile = new File(p.getDataFolder() + File.separator + "data" + File.separator + Bukkit.getServer().getPlayer(args[1]).getUniqueId() + ".yml");
-                                    YamlConfiguration yml = new YamlConfiguration().loadConfiguration(ymlFile);
+            }
 
-                                    yml.set("times", 0);
-                                    try {
-                                        yml.save(ymlFile);
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
+        } else {
+
+            player.sendMessage(Objects.requireNonNull(message.getString("noperm")));
+
+        }
+
+    }
+    private void groupCancel(Player player, String[] args) {
+
+        if (player.hasPermission("randomtp.use")) {
+
+            File ymlFile = new File(plugin.getDataFolder() + File.separator + "data" + File.separator + "data.yml");
+            YamlConfiguration yml = new YamlConfiguration().loadConfiguration(ymlFile);
+            boolean pending = yml.getBoolean("pending." + player.getUniqueId());
+            if (pending) {
+
+                yml.set("cancelled." + player.getUniqueId(), true);
+                player.sendMessage("You cancelled");//TODO: message
+
+                try {
+                    yml.save(ymlFile);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
+
+        }
+    }
+
+    private void group(Player player, String[] args) {
+
+        YamlConfiguration message = Main.message;
+        if(player.hasPermission("randomtp.use")) {
+
+            player.setWalkSpeed(0); //make it so the player can not move.
+            //player.sendMessage(Objects.requireNonNull(message.getString("group")));
+
+            File ymlFile = new File(plugin.getDataFolder() + File.separator + "data" + File.separator + "data.yml");
+            YamlConfiguration yml = new YamlConfiguration().loadConfiguration(ymlFile);
+            boolean pending = yml.getBoolean("pending." + player.getUniqueId());
+            if(pending != true) {
+
+                yml.set("pending." + player.getUniqueId(), true);
+
+                int times = plugin.getConfig().getInt("times"); //the amount of times a player can use /wild
+
+                if(yml.getInt(player.getUniqueId().toString()) < times || times == -1) {
+
+                    Location dest = randomTP(player.getWorld());
+                    player.sendMessage(message.getString("group"));
+
+                    plugin.getServer().getScheduler().scheduleSyncDelayedTask(
+                            plugin, () ->{
+
+                                File taskymlFile = new File(plugin.getDataFolder() + File.separator + "data" + File.separator + "data.yml");
+                                YamlConfiguration taskyml = new YamlConfiguration().loadConfiguration(taskymlFile);
+
+                                if(!taskyml.getBoolean("cancelled." + player.getUniqueId())) {
+
+                                    Bukkit.getLogger().info(taskyml.getBoolean("cancelled." + player.getUniqueId()) + "");
+
+                                    player.teleport(dest.add(0, 1.5, 0));
+                                    player.sendMessage(message.getString("teleport").replace("%n", "\n"));
+                                    taskyml.set(player.getUniqueId().toString(), taskyml.getInt(player.getUniqueId().toString()) + 1);
+
+                                    for(Entity e : player.getNearbyEntities(2, 2, 2)) {
+
+                                        if(e instanceof Player) {
+
+                                            Player p = (Player) e;
+                                            if(taskyml.getInt(p.getUniqueId().toString()) < times || times == -1) {
+
+
+                                                p.sendMessage(message.getString("teleport").replace("%n", "\n"));
+                                                taskyml.set(p.getUniqueId().toString(), yml.getInt(p.getUniqueId().toString()) + 1);
+
+                                            }
+
+                                        }
+
                                     }
 
-                                    player.sendMessage(message.getString("reset").replace("%p", args[1]));
 
-                                } else {
-
-                                    player.sendMessage(message.getString("noplayer"));
 
                                 }
 
-                            } else {
+                                taskyml.set("pending." + player.getUniqueId(), null);
+                                taskyml.set("cancelled." + player.getUniqueId(), null);
+                                player.setWalkSpeed((float) .2);
 
-                                player.sendMessage(message.getString("addplayer"));
+                                try {
+                                    taskyml.save(ymlFile);
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
 
-                            }
+                            }, 100);
 
-                        } else {
 
-                            player.sendMessage(message.getString("noperm"));
 
-                        }
-
-                    } else {
-
-                        if(args[0].equalsIgnoreCase( "reload")) {
-
-                            if(player.hasPermission("randomtp.reload")) {
-
-                                p.reloadConfig();
-                                player.sendMessage(message.getString("reload"));
-
-                            } else {
-
-                                player.sendMessage(message.getString("noperm"));
-
-                            }
-
-                        }
-
+                    try {
+                        yml.save(ymlFile);
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
 
                 }
 
             } else {
 
-                //if no arguments exist, add warning message saying /wild confirm to run command.
-                player.sendMessage(message.getString("info").replace("%n", "\n"));
-                //player.sendMessage(colorize("&eType /wild confirm to teleport"));
+                player.sendMessage("You have a pending teleport");//TODO:messages
 
             }
 
 
 
-
-
         } else {
 
-            sender.sendMessage(message.getString("ingame"));
+            player.sendMessage(Objects.requireNonNull(message.getString("noperm")));
 
         }
-        return true;
+
     }
 
+    public Location randomTP(World world) {
+
+        WorldBorder wb = world.getWorldBorder();
+        int wbSize = (int) wb.getSize() / 2;
+        Location loc = wb.getCenter();
+
+        Random num = new Random();
+        Block b;
+        Location dest;
+        boolean waterlogged;
+        boolean voidBlock = false;
+        List<String> badBlocks = plugin.getConfig().getStringList("disallowedblocks");
+
+        do {
+            double x = num.nextInt(wbSize);
+            double z = num.nextInt(wbSize);
+            int negX = num.nextInt(2);
+            int negZ = num.nextInt(2);
+
+
+            if (negX == 1) x *= -1;
+            if (negZ == 1) z *= -1;
+
+            dest = new Location(world,
+                    loc.getX() + x,
+                    255, //using this because getHighestBlockatY does not work as intended. Players can spawn inside structures or trees.
+                    //player.getWorld().getHighestBlockYAt(loc.getBlockX() + (int) x, loc.getBlockZ() + (int) z),
+                    loc.getZ() + z);
+
+
+            while (dest.getBlock().getType().equals(Material.AIR)) {
+                //getting highest block by going from top Y down
+                if(dest.getY() > 0) dest.setY(dest.getY() - 1);
+                else {
+                    voidBlock = true;
+                    break;
+                }
+
+
+            }
+
+            b = dest.getBlock();
+
+            if (!plugin.getConfig().getBoolean("allowwaterloggedblocks")) waterlogged = b.getBlockData() instanceof Waterlogged;
+            else waterlogged = false;
+
+        } while (badBlocks.contains(b.getType().toString()) || waterlogged || voidBlock);
+
+        return dest;
+    }
+
+    public static String[] trim(String[] args){
+        return Arrays.copyOfRange(args, 1, args.length);
+    }
 
 }
